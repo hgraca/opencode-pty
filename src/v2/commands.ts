@@ -1,6 +1,6 @@
 import open from 'open'
 import { PTYServer, type ServerOptions } from '../web/server/server.ts'
-import type { CommandDraft, OpencodePtyOptions } from './types.ts'
+import type { CommandDraft } from './types.ts'
 
 export const PTY_OPEN_CLIENT_COMMAND = 'pty-open-background-spy'
 export const PTY_SHOW_SERVER_URL_COMMAND = 'pty-show-server-url'
@@ -44,7 +44,7 @@ export async function handleShowServerUrlCommand(options?: ServerOptions): Promi
  * (there is no `update`), so commands must be created with an `execute`
  * handler rather than "updated".
  */
-export function registerV2Commands(draft: CommandDraft, options?: OpencodePtyOptions): void {
+export function registerV2Commands(draft: CommandDraft, options?: ServerOptions): void {
   if (typeof draft.add !== 'function') {
     return
   }

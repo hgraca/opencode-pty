@@ -1,5 +1,6 @@
 import type { Server } from 'bun'
 import { routes } from '../shared/routes.ts'
+import { removeOrigin, writeOrigin } from '../../shared/runtime.ts'
 import { CallbackManager } from './callback-manager.ts'
 import { handleHealth } from './handlers/health.ts'
 import {
@@ -20,6 +21,9 @@ import { handleWebSocketMessage } from './handlers/websocket.ts'
 export interface ServerOptions {
   port?: number
   hostname?: string
+  /** The project this server belongs to — published so the TUI can find it. */
+  directory?: string
+  worktree?: string
 }
 
 export class PTYServer implements Disposable {
@@ -27,13 +31,30 @@ export class PTYServer implements Disposable {
   private readonly staticRoutes: Record<string, Response>
   private readonly stack = new DisposableStack()
   private readonly options?: ServerOptions
+  /** The published origin record, removed when the server is disposed. */
+  private readonly originFile: string | null
 
   private constructor(staticRoutes: Record<string, Response>, options?: ServerOptions) {
     this.staticRoutes = staticRoutes
     this.options = options
     this.server = this.startWebServer()
+    // Publish the bound address, not the requested one: a wildcard bind or a
+    // normalised hostname would otherwise be recorded as something that cannot
+    // be connected to. Bun's types mark both as optional, so they are narrowed
+    // rather than asserted — a missing one just means nothing is published.
+    const { hostname, port } = this.server
+    this.originFile =
+      typeof hostname === 'string' && typeof port === 'number'
+        ? writeOrigin({
+            directory: options?.directory,
+            worktree: options?.worktree,
+            hostname,
+            port,
+          })
+        : null
     this.stack.use(this.server)
     this.stack.use(new CallbackManager(this.server))
+    this.stack.use({ [Symbol.dispose]: () => removeOrigin(this.originFile) })
   }
 
   [Symbol.dispose]() {

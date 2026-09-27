@@ -1,9 +1,10 @@
 import { createV2Adapter } from '../adapters/v2/index.ts'
 import { installHostAdapter } from '../adapters/index.ts'
+import type { ServerOptions } from '../web/server/server.ts'
 import { getOrCreateServer, registerV2Commands } from './commands.ts'
 import { V2SessionNotifier } from './notifier.ts'
 import { registerV2Tools } from './tools.ts'
-import { define, type OpencodePtyOptions, type PluginContextV2, type PluginV2 } from './types.ts'
+import { define, type PluginContextV2, type PluginV2 } from './types.ts'
 
 export * from './commands.ts'
 export * from './notifier.ts'
@@ -39,17 +40,26 @@ export const Plugin: PluginV2 = define({
       })
     }
 
+    // The project directory lives on `location`. `ctx.worktree` is deliberately
+    // NOT used: it is a domain object on the V2 API, not a path, and passing it
+    // through reached createHash and threw. Absent paths only mean no record is
+    // published — the sidebar then falls back to the instance-scoped URL scrape.
+    const location = (ctx as unknown as { location?: { directory?: unknown } }).location
+    const directory = typeof location?.directory === 'string' ? location.directory : undefined
+    const serverOptions: ServerOptions = {
+      port: ctx.options?.port,
+      hostname: ctx.options?.hostname,
+      ...(directory ? { directory } : {}),
+    }
+
     if (ctx.command && typeof ctx.command.transform === 'function') {
       await ctx.command.transform((draft) => {
-        registerV2Commands(draft, ctx.options as OpencodePtyOptions | undefined)
+        registerV2Commands(draft, serverOptions)
       })
     }
 
     if (ctx.options?.autostart) {
-      await getOrCreateServer({
-        port: ctx.options.port,
-        hostname: ctx.options.hostname,
-      })
+      await getOrCreateServer(serverOptions)
     }
   },
 })

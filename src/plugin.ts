@@ -23,7 +23,10 @@ export const PTYPlugin = async (context: PluginContext): Promise<PluginResult> =
         return
       }
       if (ptyServer === undefined) {
-        ptyServer = await PTYServer.createServer()
+        ptyServer = await PTYServer.createServer({
+          directory: context.directory,
+          worktree: context.worktree,
+        })
       }
       if (input.command === ptyOpenClientCommand) {
         open(ptyServer.server.url.origin)
