@@ -133,6 +133,9 @@ export class SessionLifecycleManager {
       }
       session.exitCode = exitCode
       session.exitSignal = signal
+      // When the process stopped, so a reader can report how long it ran: the
+      // buffer keeps the output but nothing else records the end.
+      session.exitAt = new Date()
       onExit(session, exitCode)
     })
   }
@@ -215,6 +218,7 @@ export class SessionLifecycleManager {
       timedOut: session.timedOut,
       exitCode: session.exitCode,
       exitSignal: session.exitSignal,
+      exitAt: session.exitAt?.toISOString(),
       pid: session.pid,
       createdAt: session.createdAt.toISOString(),
       lineCount: session.buffer.length,

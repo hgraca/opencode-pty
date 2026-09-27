@@ -14,6 +14,7 @@ export interface PTYSession {
   status: PTYStatus
   exitCode?: number
   exitSignal?: number | string
+  exitAt?: Date
   pid: number
   createdAt: Date
   parentSessionId: string
@@ -38,6 +39,7 @@ export interface PTYSessionInfo {
   timedOut: boolean
   exitCode?: number
   exitSignal?: number | string
+  exitAt?: string
   pid: number
   createdAt: string
   lineCount: number
