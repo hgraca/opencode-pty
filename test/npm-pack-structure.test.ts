@@ -47,6 +47,11 @@ describe('npm pack structure', () => {
     // 3) Validate required files exist; NPM tarballs use 'package/' prefix
     expect(files).toContain('package/dist/web/index.html')
 
+    // The TUI entry that package.json's ./tui export points at must be packaged
+    // too: opencode resolves that export and skips a package whose target is
+    // missing, so a tarball without this file ships a sidebar that never loads.
+    expect(files).toContain('package/dist/src/tui/index.js')
+
     // At least one hashed JS and CSS asset
     const hasJsAsset = files.some((f) => /package\/dist\/web\/assets\/[^/]+\.js$/.test(f))
     const hasCssAsset = files.some((f) => /package\/dist\/web\/assets\/[^/]+\.css$/.test(f))
