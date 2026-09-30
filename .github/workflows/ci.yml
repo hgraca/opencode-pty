@@ -68,7 +68,9 @@ jobs:
       - name: Install Determinate Nix
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Install devenv
-        run: nix profile add nixpkgs#devenv
+        # Pinned to devenv 2.2.2: nixpkgs#devenv floats (FlakeHub nixpkgs-weekly) and
+        # devenv >=2.3.0 fails against the current devenv.lock (dotenv.resolved).
+        run: nix profile add 'github:NixOS/nixpkgs/bb11e50a8843e245cd8400e1ae3823bd6f64cc9c#devenv'
       - name: Cache Bun dependencies
         uses: actions/cache@v5
         with:
